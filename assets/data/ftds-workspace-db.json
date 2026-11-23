@@ -1,0 +1,650 @@
+{
+  "id": "ftds-proj-enterprise-01",
+  "name": "Automotive_Assembly_Cell_04",
+  "revision": "36.011",
+  "controllerName": "Cell04_GuardLogix_5580",
+  "controllerCatalog": "1756-L84ES / B (Safety SIL3)",
+  "branch": "feature/robot-cell-interlock",
+  "emulationRunning": true,
+  "scanTimeMs": 3.8,
+  "hardware": [
+    {
+      "slot": 0,
+      "catalogNumber": "1756-L84ES",
+      "name": "GuardLogix_Safety_CPU",
+      "status": "SIMULATED",
+      "firmware": "36.011",
+      "ipAddress": "192.168.10.10"
+    },
+    {
+      "slot": 1,
+      "catalogNumber": "1756-L8SP",
+      "name": "Safety_Partner_Module",
+      "status": "OK",
+      "firmware": "36.011",
+      "ipAddress": "Backplane"
+    },
+    {
+      "slot": 2,
+      "catalogNumber": "1756-IB16D",
+      "name": "DI_LightCurtain_Sensors",
+      "status": "OK",
+      "firmware": "3.014",
+      "ipAddress": "Backplane"
+    },
+    {
+      "slot": 3,
+      "catalogNumber": "1756-OB16E",
+      "name": "DO_Conveyor_Clamps",
+      "status": "OK",
+      "firmware": "3.012",
+      "ipAddress": "Backplane"
+    },
+    {
+      "slot": 4,
+      "catalogNumber": "1756-IF8",
+      "name": "AI_Torque_Temperature",
+      "status": "OK",
+      "firmware": "2.009",
+      "ipAddress": "Backplane"
+    },
+    {
+      "slot": 5,
+      "catalogNumber": "1756-EN4TR",
+      "name": "DLR_DeviceLevelRing_NIC",
+      "status": "OK",
+      "firmware": "5.002",
+      "ipAddress": "192.168.10.11"
+    }
+  ],
+  "userDefinedTypes": [
+    {
+      "id": "udt-motor-01",
+      "name": "UDT_VFD_DriveStatus",
+      "description": "Standard PowerFlex 525 / 755 EtherNet/IP Drive Data Structure",
+      "members": [
+        {
+          "name": "Ready",
+          "dataType": "BOOL",
+          "description": "Drive pre-charge complete & no fault"
+        },
+        {
+          "name": "Active",
+          "dataType": "BOOL",
+          "description": "Motor shaft rotating"
+        },
+        {
+          "name": "Faulted",
+          "dataType": "BOOL",
+          "description": "Drive tripped on fault"
+        },
+        {
+          "name": "CommandFreq_Hz",
+          "dataType": "REAL",
+          "description": "Speed reference in Hz"
+        },
+        {
+          "name": "OutputCurrent_A",
+          "dataType": "REAL",
+          "description": "Motor phase current"
+        }
+      ]
+    },
+    {
+      "id": "udt-station-02",
+      "name": "UDT_StationOEE",
+      "description": "Cell cycle time & part tracking telemetry payload",
+      "members": [
+        {
+          "name": "CycleActive",
+          "dataType": "BOOL",
+          "description": "Part clamped and processing"
+        },
+        {
+          "name": "GoodPartsCount",
+          "dataType": "DINT",
+          "description": "Total verified assemblies"
+        },
+        {
+          "name": "RejectPartsCount",
+          "dataType": "DINT",
+          "description": "Total rejected assemblies"
+        },
+        {
+          "name": "LastCycleTime_Sec",
+          "dataType": "REAL",
+          "description": "Measured station tact time"
+        }
+      ]
+    }
+  ],
+  "tags": [
+    {
+      "id": "t1",
+      "name": "Safety_LightCurtain_OK",
+      "dataType": "BOOL",
+      "scope": "Controller",
+      "scopeOwner": "Cell04_GuardLogix_5580",
+      "usage": "Input",
+      "value": true,
+      "description": "Zone 1 OSSD safety light curtain clear"
+    },
+    {
+      "id": "t2",
+      "name": "Master_EStop_Healthy",
+      "dataType": "BOOL",
+      "scope": "Controller",
+      "scopeOwner": "Cell04_GuardLogix_5580",
+      "usage": "Input",
+      "value": true,
+      "description": "Dual-channel E-Stop safety relay OK"
+    },
+    {
+      "id": "t3",
+      "name": "Auto_Cycle_Start_PB",
+      "dataType": "BOOL",
+      "scope": "Controller",
+      "scopeOwner": "Cell04_GuardLogix_5580",
+      "usage": "Input",
+      "value": true,
+      "description": "Operator HMI Auto Start command"
+    },
+    {
+      "id": "t4",
+      "name": "Cycle_Stop_PB",
+      "dataType": "BOOL",
+      "scope": "Controller",
+      "scopeOwner": "Cell04_GuardLogix_5580",
+      "usage": "Input",
+      "value": false,
+      "description": "Controlled cycle stop push button"
+    },
+    {
+      "id": "t5",
+      "name": "Infeed_Conveyor_Run",
+      "dataType": "BOOL",
+      "scope": "Controller",
+      "scopeOwner": "Cell04_GuardLogix_5580",
+      "usage": "Output",
+      "value": true,
+      "description": "VFD M101 forward run command"
+    },
+    {
+      "id": "t6",
+      "name": "Part_In_Position_PE",
+      "dataType": "BOOL",
+      "scope": "Program",
+      "scopeOwner": "Station04_Sequence",
+      "usage": "Input",
+      "value": true,
+      "description": "Fixture datum proximity sensor"
+    },
+    {
+      "id": "t7",
+      "name": "Fixture_Clamp_Extend",
+      "dataType": "BOOL",
+      "scope": "Program",
+      "scopeOwner": "Station04_Sequence",
+      "usage": "Output",
+      "value": true,
+      "description": "Pneumatic toggle clamp valve"
+    },
+    {
+      "id": "t8",
+      "name": "Robot_Welding_Active",
+      "dataType": "BOOL",
+      "scope": "Program",
+      "scopeOwner": "Station04_Sequence",
+      "usage": "InOut",
+      "value": false,
+      "description": "FANUC R-2000iC cycle busy handshake"
+    },
+    {
+      "id": "t9",
+      "name": "Conveyor_Speed_RPM",
+      "dataType": "REAL",
+      "scope": "Controller",
+      "scopeOwner": "Cell04_GuardLogix_5580",
+      "usage": "InOut",
+      "value": 148.5,
+      "description": "Encoder actual belt speed"
+    },
+    {
+      "id": "t10",
+      "name": "Target_Speed_Setpoint",
+      "dataType": "REAL",
+      "scope": "Program",
+      "scopeOwner": "Station04_Sequence",
+      "usage": "Input",
+      "value": 135.0,
+      "description": "Recipe target line speed"
+    },
+    {
+      "id": "t11",
+      "name": "Total_Produced_Parts",
+      "dataType": "DINT",
+      "scope": "Controller",
+      "scopeOwner": "Cell04_GuardLogix_5580",
+      "usage": "Public",
+      "value": 412,
+      "description": "Shift completed assembly count"
+    },
+    {
+      "id": "t12",
+      "name": "Rtn_Local_Permissive",
+      "dataType": "BOOL",
+      "scope": "Routine",
+      "scopeOwner": "Main_Sequence_LD",
+      "usage": "Local",
+      "value": true,
+      "description": "FTDS Routine-scoped internal permissive bit"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "task-continuous",
+      "name": "MainTask",
+      "type": "CONTINUOUS",
+      "priority": 10,
+      "watchdogMs": 500,
+      "programs": [
+        {
+          "id": "prog-station04",
+          "name": "Station04_Sequence",
+          "taskName": "MainTask",
+          "mainRoutineName": "Main_Sequence_LD",
+          "routines": [
+            {
+              "id": "rtn-ld-main",
+              "name": "Main_Sequence_LD",
+              "language": "LD",
+              "programName": "Station04_Sequence",
+              "description": "Primary conveyor seal-in, safety interlock & fixture clamping ladder logic",
+              "stCode": "// Neutral Text Representation (FTDS Text-Based DSL)\nRUNG 0: XIC(Master_EStop_Healthy) XIC(Safety_LightCurtain_OK) XIC(Auto_Cycle_Start_PB) XIO(Cycle_Stop_PB) OTE(Infeed_Conveyor_Run);\nRUNG 1: XIC(Infeed_Conveyor_Run) XIC(Part_In_Position_PE) TON(Clamp_Settle_Tmr, 300, 0) OTE(Fixture_Clamp_Extend);\nRUNG 2: XIC(Fixture_Clamp_Extend) XIO(Robot_Welding_Active) OTE(Rtn_Local_Permissive);",
+              "rungs": [
+                {
+                  "id": "rung-0",
+                  "number": 0,
+                  "comment": "Master Safety & Infeed Conveyor Seal-In Circuit",
+                  "powerFlowActive": true,
+                  "instructions": [
+                    {
+                      "id": "i1",
+                      "opcode": "XIC",
+                      "operand": "Master_EStop_Healthy",
+                      "branch": "MAIN"
+                    },
+                    {
+                      "id": "i2",
+                      "opcode": "XIC",
+                      "operand": "Safety_LightCurtain_OK",
+                      "branch": "MAIN"
+                    },
+                    {
+                      "id": "i3",
+                      "opcode": "XIC",
+                      "operand": "Auto_Cycle_Start_PB",
+                      "branch": "MAIN"
+                    },
+                    {
+                      "id": "i4",
+                      "opcode": "XIO",
+                      "operand": "Cycle_Stop_PB",
+                      "branch": "MAIN"
+                    },
+                    {
+                      "id": "i5",
+                      "opcode": "OTE",
+                      "operand": "Infeed_Conveyor_Run",
+                      "branch": "MAIN"
+                    }
+                  ]
+                },
+                {
+                  "id": "rung-1",
+                  "number": 1,
+                  "comment": "Part Datum Detection & Pneumatic Fixture Clamp Actuation",
+                  "powerFlowActive": true,
+                  "instructions": [
+                    {
+                      "id": "i6",
+                      "opcode": "XIC",
+                      "operand": "Infeed_Conveyor_Run",
+                      "branch": "MAIN"
+                    },
+                    {
+                      "id": "i7",
+                      "opcode": "XIC",
+                      "operand": "Part_In_Position_PE",
+                      "branch": "MAIN"
+                    },
+                    {
+                      "id": "i8",
+                      "opcode": "TON",
+                      "operand": "Clamp_Settle_Tmr",
+                      "presetMs": 300,
+                      "branch": "MAIN"
+                    },
+                    {
+                      "id": "i9",
+                      "opcode": "OTE",
+                      "operand": "Fixture_Clamp_Extend",
+                      "branch": "MAIN"
+                    }
+                  ]
+                },
+                {
+                  "id": "rung-2",
+                  "number": 2,
+                  "comment": "Robot Entry Permissive Handshake (Routine-Scoped Tag)",
+                  "powerFlowActive": true,
+                  "instructions": [
+                    {
+                      "id": "i10",
+                      "opcode": "XIC",
+                      "operand": "Fixture_Clamp_Extend",
+                      "branch": "MAIN"
+                    },
+                    {
+                      "id": "i11",
+                      "opcode": "XIO",
+                      "operand": "Robot_Welding_Active",
+                      "branch": "MAIN"
+                    },
+                    {
+                      "id": "i12",
+                      "opcode": "OTE",
+                      "operand": "Rtn_Local_Permissive",
+                      "branch": "MAIN"
+                    }
+                  ]
+                }
+              ],
+              "fbdNodes": [],
+              "fbdWires": []
+            },
+            {
+              "id": "rtn-st-drive",
+              "name": "VFD_Speed_Control_ST",
+              "language": "ST",
+              "programName": "Station04_Sequence",
+              "description": "IEC 61131-3 Structured Text VFD speed scaling & part counter routine",
+              "stCode": "// ============================================================================\n// FactoryTalk Design Studio - Structured Text (IEC 61131-3)\n// Routine: VFD_Speed_Control_ST | Program: Station04_Sequence\n// ============================================================================\n\nREGION Safety_Guard_Check\n    IF NOT Master_EStop_Healthy OR NOT Safety_LightCurtain_OK THEN\n        Infeed_Conveyor_Run := FALSE;\n        Fixture_Clamp_Extend := FALSE;\n        Conveyor_Speed_RPM := 0.0;\n        RETURN;\n    END_IF;\nEND_REGION\n\nREGION Drive_Velocity_Regulation\n    IF Infeed_Conveyor_Run THEN\n        IF Conveyor_Speed_RPM >= Target_Speed_Setpoint THEN\n            IF Part_In_Position_PE AND NOT Robot_Welding_Active THEN\n                Fixture_Clamp_Extend := TRUE;\n                Total_Produced_Parts := Total_Produced_Parts + 1;\n            END_IF;\n        END_IF;\n    ELSE\n        Conveyor_Speed_RPM := 0.0;\n    END_IF;\nEND_REGION\n",
+              "rungs": [],
+              "fbdNodes": [],
+              "fbdWires": []
+            },
+            {
+              "id": "rtn-fbd-safety",
+              "name": "Safety_Permissive_FBD",
+              "language": "FBD",
+              "programName": "Station04_Sequence",
+              "description": "Function Block Diagram for GuardLogix zone permissive logic",
+              "stCode": "// FBD Sheet Neutral Export",
+              "rungs": [],
+              "fbdNodes": [
+                {
+                  "id": "fn1",
+                  "type": "INPUT_REF",
+                  "label": "Master_EStop_Healthy",
+                  "tagRef": "Master_EStop_Healthy",
+                  "x": 35,
+                  "y": 40,
+                  "state": true
+                },
+                {
+                  "id": "fn2",
+                  "type": "INPUT_REF",
+                  "label": "Safety_LightCurtain_OK",
+                  "tagRef": "Safety_LightCurtain_OK",
+                  "x": 35,
+                  "y": 135,
+                  "state": true
+                },
+                {
+                  "id": "fn3",
+                  "type": "INPUT_REF",
+                  "label": "Part_In_Position_PE",
+                  "tagRef": "Part_In_Position_PE",
+                  "x": 35,
+                  "y": 230,
+                  "state": true
+                },
+                {
+                  "id": "fn4",
+                  "type": "AND",
+                  "label": "BAND_01 (Safety)",
+                  "x": 270,
+                  "y": 85,
+                  "state": true
+                },
+                {
+                  "id": "fn5",
+                  "type": "AND",
+                  "label": "BAND_02 (Cycle)",
+                  "x": 485,
+                  "y": 145,
+                  "state": true
+                },
+                {
+                  "id": "fn6",
+                  "type": "OUTPUT_REF",
+                  "label": "Fixture_Clamp_Extend",
+                  "tagRef": "Fixture_Clamp_Extend",
+                  "x": 700,
+                  "y": 145,
+                  "state": true
+                }
+              ],
+              "fbdWires": [
+                {
+                  "id": "fw1",
+                  "fromNodeId": "fn1",
+                  "toNodeId": "fn4",
+                  "active": true
+                },
+                {
+                  "id": "fw2",
+                  "fromNodeId": "fn2",
+                  "toNodeId": "fn4",
+                  "active": true
+                },
+                {
+                  "id": "fw3",
+                  "fromNodeId": "fn4",
+                  "toNodeId": "fn5",
+                  "active": true
+                },
+                {
+                  "id": "fw4",
+                  "fromNodeId": "fn3",
+                  "toNodeId": "fn5",
+                  "active": true
+                },
+                {
+                  "id": "fw5",
+                  "fromNodeId": "fn5",
+                  "toNodeId": "fn6",
+                  "active": true
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "task-periodic-100",
+      "name": "OEE_Telemetry_100ms",
+      "type": "PERIODIC",
+      "rateMs": 100,
+      "priority": 6,
+      "watchdogMs": 200,
+      "programs": [
+        {
+          "id": "prog-diagnostics",
+          "name": "PlantPAx_Diagnostics",
+          "taskName": "OEE_Telemetry_100ms",
+          "mainRoutineName": "OEE_Rollup_ST",
+          "routines": [
+            {
+              "id": "rtn-st-oee",
+              "name": "OEE_Rollup_ST",
+              "language": "ST",
+              "programName": "PlantPAx_Diagnostics",
+              "description": "Periodic 100ms KPI & OEE rollup for FactoryTalk Optix HMI",
+              "stCode": "// Periodic 100ms OEE Calculation\nIF Infeed_Conveyor_Run AND (Conveyor_Speed_RPM >= Target_Speed_Setpoint) THEN\n    Rtn_Local_Permissive := TRUE;\nELSE\n    Rtn_Local_Permissive := FALSE;\nEND_IF;\n",
+              "rungs": [],
+              "fbdNodes": [],
+              "fbdWires": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "smartObjects": [
+    {
+      "id": "so-pf525",
+      "name": "SO_PowerFlex525_VFD",
+      "category": "Motor Drive",
+      "version": "3.2.0",
+      "author": "Rockwell Process Library",
+      "description": "Standardized PowerFlex 525 drive control with E-Stop interlock, speed ramp & fault reset.",
+      "templateRoutine": {
+        "language": "ST",
+        "stCode": "// Smart Object Instance: SO_PowerFlex525_VFD\nIF Master_EStop_Healthy AND Safety_LightCurtain_OK AND Auto_Cycle_Start_PB THEN\n    Infeed_Conveyor_Run := TRUE;\n    Conveyor_Speed_RPM := Target_Speed_Setpoint;\nELSE\n    Infeed_Conveyor_Run := FALSE;\n    Conveyor_Speed_RPM := 0.0;\nEND_IF;\n"
+      }
+    },
+    {
+      "id": "so-pneumatic-clamp",
+      "name": "SO_DualActing_Clamp",
+      "category": "Actuator",
+      "version": "2.1.4",
+      "author": "Automotive Standard",
+      "description": "Pneumatic fixture clamp control with part-present permissive & settle timer.",
+      "templateRoutine": {
+        "language": "LD",
+        "rungs": [
+          {
+            "id": "so-rung-1",
+            "number": 0,
+            "comment": "Smart Object Clamp Extend Interlock",
+            "powerFlowActive": true,
+            "instructions": [
+              {
+                "id": "soi1",
+                "opcode": "XIC",
+                "operand": "Master_EStop_Healthy",
+                "branch": "MAIN"
+              },
+              {
+                "id": "soi2",
+                "opcode": "XIC",
+                "operand": "Part_In_Position_PE",
+                "branch": "MAIN"
+              },
+              {
+                "id": "soi3",
+                "opcode": "OTE",
+                "operand": "Fixture_Clamp_Extend",
+                "branch": "MAIN"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "so-safety-gate",
+      "name": "SO_GuardMaster_Gate",
+      "category": "Safety",
+      "version": "4.0.1",
+      "author": "Rockwell Safety Team",
+      "description": "SIL3 / PLe safety gate & light curtain dual-channel monitoring block.",
+      "templateRoutine": {
+        "language": "FBD",
+        "fbdNodes": [
+          {
+            "id": "sn1",
+            "type": "INPUT_REF",
+            "label": "Master_EStop_Healthy",
+            "tagRef": "Master_EStop_Healthy",
+            "x": 40,
+            "y": 50,
+            "state": true
+          },
+          {
+            "id": "sn2",
+            "type": "INPUT_REF",
+            "label": "Safety_LightCurtain_OK",
+            "tagRef": "Safety_LightCurtain_OK",
+            "x": 40,
+            "y": 140,
+            "state": true
+          },
+          {
+            "id": "sn3",
+            "type": "AND",
+            "label": "SAFE_AND_01",
+            "x": 280,
+            "y": 95,
+            "state": true
+          },
+          {
+            "id": "sn4",
+            "type": "OUTPUT_REF",
+            "label": "Infeed_Conveyor_Run",
+            "tagRef": "Infeed_Conveyor_Run",
+            "x": 520,
+            "y": 95,
+            "state": true
+          }
+        ],
+        "fbdWires": [
+          {
+            "id": "sw1",
+            "fromNodeId": "sn1",
+            "toNodeId": "sn3",
+            "active": true
+          },
+          {
+            "id": "sw2",
+            "fromNodeId": "sn2",
+            "toNodeId": "sn3",
+            "active": true
+          },
+          {
+            "id": "sw3",
+            "fromNodeId": "sn3",
+            "toNodeId": "sn4",
+            "active": true
+          }
+        ]
+      }
+    }
+  ],
+  "commits": [
+    {
+      "hash": "9e4a21b",
+      "message": "feat(station04): add light curtain & E-Stop seal-in interlock",
+      "author": "Selvaraj",
+      "timestamp": "1 hour ago",
+      "branch": "feature/robot-cell-interlock"
+    },
+    {
+      "hash": "4c81d0f",
+      "message": "refactor(udt): map UDT_VFD_DriveStatus to PowerFlex 525 slot",
+      "author": "Selvaraj",
+      "timestamp": "Yesterday",
+      "branch": "feature/robot-cell-interlock"
+    },
+    {
+      "hash": "1a09f7e",
+      "message": "chore(vault): initial project baseline from FactoryTalk Vault",
+      "author": "Vault Admin",
+      "timestamp": "3 days ago",
+      "branch": "main"
+    }
+  ]
+}
