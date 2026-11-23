@@ -1,0 +1,54 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --blue:      #1a5276;
+  --blue-dark: #154360;
+  --blue-mid:  #2471a3;
+  --blue-lt:   #d6eaf8;
+  --blue-sel:  #2e86c1;
+  --green:     #1e8449;
+  --green-lt:  #d5f5e3;
+  --red:       #c0392b;
+  --orange:    #d68910;
+  --grey-bg:   #f4f4f4;
+  --grey-bar:  #e8e8e8;
+  --grey-mid:  #d0d0d0;
+  --grey-dark: #a0a0a0;
+  --border:    #c8c8c8;
+  --text:      #1a1a1a;
+  --text-mid:  #555;
+  --text-muted:#888;
+  --font: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+  --mono: 'Cascadia Code', 'Consolas', 'Courier New', monospace;
+}
+
+html, body {
+  height: 100%; width: 100%;
+  overflow: hidden;
+  background: var(--grey-bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
+}
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: #f0f0f0; }
+::-webkit-scrollbar-thumb { background: #c0c0c0; }
+::-webkit-scrollbar-thumb:hover { background: #a0a0a0; }
+
+button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+input, select, textarea {
+  font-family: inherit; font-size: 12px;
+  color: var(--text); background: #fff;
+  border: 1px solid var(--border); padding: 4px 7px; outline: none;
+}
+input:focus, select:focus, textarea:focus { border-color: var(--blue-sel); box-shadow: 0 0 0 2px rgba(46,134,193,0.2); }
+
+/* IEC 61131-3 syntax tokens */
+.tok-comment { color: #6a9955; font-style: italic; }
+.tok-kw      { color: #0000ff; font-weight: 600; }
+.tok-type    { color: #267f99; }
+.tok-bool    { color: #0000ff; }
+.tok-num     { color: #098658; }
+.tok-string  { color: #a31515; }

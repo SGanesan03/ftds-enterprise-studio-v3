@@ -1,0 +1,167 @@
+<div class="ld-shell">
+
+  <!-- Ladder Toolbar -->
+  <div class="ld-toolbar">
+    <div class="ld-tb-group">
+      <button class="ld-tb-btn" [class.active]="ldMode==='select'" (click)="ldMode='select'" title="Select">
+        <i class="fi fi-rr-cursor"></i>
+      </button>
+      <button class="ld-tb-btn" [class.active]="ldMode==='wire'" (click)="ldMode='wire'" title="Wire">
+        <i class="fi fi-rr-minus"></i>
+      </button>
+    </div>
+    <div class="ld-tb-sep"></div>
+    <div class="ld-tb-group">
+      <button class="ld-tb-btn" title="Undo"><i class="fi fi-rr-undo"></i></button>
+      <button class="ld-tb-btn" title="Redo"><i class="fi fi-rr-redo"></i></button>
+    </div>
+    <div class="ld-tb-sep"></div>
+    <div class="ld-tb-group">
+      <button class="ld-tb-btn xic-btn" title="XIC — Examine If Closed" (click)="addInstruction('XIC')">
+        <svg width="22" height="16" viewBox="0 0 22 16"><line x1="0" y1="8" x2="5" y2="8" stroke="currentColor" stroke-width="1.5"/><line x1="5" y1="3" x2="5" y2="13" stroke="currentColor" stroke-width="1.5"/><line x1="17" y1="3" x2="17" y2="13" stroke="currentColor" stroke-width="1.5"/><line x1="17" y1="8" x2="22" y2="8" stroke="currentColor" stroke-width="1.5"/></svg>
+        <span>XIC</span>
+      </button>
+      <button class="ld-tb-btn xic-btn" title="XIO — Examine If Open" (click)="addInstruction('XIO')">
+        <svg width="22" height="16" viewBox="0 0 22 16"><line x1="0" y1="8" x2="5" y2="8" stroke="currentColor" stroke-width="1.5"/><line x1="5" y1="3" x2="5" y2="13" stroke="currentColor" stroke-width="1.5"/><line x1="17" y1="3" x2="17" y2="13" stroke="currentColor" stroke-width="1.5"/><line x1="17" y1="8" x2="22" y2="8" stroke="currentColor" stroke-width="1.5"/><line x1="8" y1="5" x2="14" y2="11" stroke="currentColor" stroke-width="1.5"/></svg>
+        <span>XIO</span>
+      </button>
+      <button class="ld-tb-btn xic-btn" title="OTE — Output Energize" (click)="addInstruction('OTE')">
+        <svg width="22" height="16" viewBox="0 0 22 16"><line x1="0" y1="8" x2="5" y2="8" stroke="currentColor" stroke-width="1.5"/><circle cx="11" cy="8" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><line x1="17" y1="8" x2="22" y2="8" stroke="currentColor" stroke-width="1.5"/></svg>
+        <span>OTE</span>
+      </button>
+      <button class="ld-tb-btn xic-btn" title="TON — Timer On Delay" (click)="addInstruction('TON')">
+        <i class="fi fi-rr-time-add"></i>
+        <span>TON</span>
+      </button>
+    </div>
+    <div class="ld-tb-sep"></div>
+    <div class="ld-tb-group">
+      <button class="ld-tb-btn add-rung" (click)="addRung()">
+        <i class="fi fi-rr-add"></i> Rung
+      </button>
+    </div>
+    <div class="ld-tb-sep"></div>
+    <div class="ld-tb-group zoom-group">
+      <button class="ld-tb-btn" (click)="zoom = Math.max(50, zoom - 10)"><i class="fi fi-rr-zoom-out"></i></button>
+      <span class="zoom-val">{{ zoom }}%</span>
+      <button class="ld-tb-btn" (click)="zoom = Math.min(200, zoom + 10)"><i class="fi fi-rr-zoom-in"></i></button>
+      <button class="ld-tb-btn" title="Fit" (click)="zoom=100"><i class="fi fi-rr-expand"></i></button>
+    </div>
+  </div>
+
+  <!-- Ladder Canvas -->
+  <div class="ld-canvas" [style.font-size.px]="13 * zoom / 100">
+
+    <div *ngIf="!rungs.length" class="ld-empty">
+      No rungs. Click <strong>+ Rung</strong> to add one.
+    </div>
+
+    <div *ngFor="let rung of rungs; let rIdx = index"
+      class="rung-row"
+      [class.selected]="selectedRungIndex === rIdx"
+      [class.energized]="rung.powerFlowActive"
+      (click)="selectedRungIndex = rIdx">
+
+      <!-- Rung comment -->
+      <div class="rung-comment-row">
+        <span class="rung-comment-txt">{{ rung.comment }}</span>
+        <button class="del-rung-btn" (click)="deleteRung(rIdx, $event)">
+          <i class="fi fi-rr-trash"></i> Delete Rung
+        </button>
+      </div>
+
+      <!-- Wire row -->
+      <div class="rung-wire-row">
+
+        <!-- Left power rail -->
+        <div class="power-rail left" [class.live]="rung.powerFlowActive"></div>
+
+        <!-- Rung number -->
+        <div class="rung-num-col">{{ rung.number }}</div>
+
+        <!-- Horizontal wire + instructions -->
+        <div class="rung-track">
+          <div class="h-wire" [class.live]="rung.powerFlowActive"></div>
+
+          <div *ngFor="let inst of rung.instructions; let iIdx = index"
+            class="inst-cell"
+            [class.energized]="isTagTrue(inst.operand)">
+
+            <!-- Tag name (above) -->
+            <div class="inst-tag-name"
+              (click)="toggleOperandTag(inst.operand, $event)"
+              [class.live]="isTagTrue(inst.operand)"
+              title="Click to toggle">
+              {{ inst.operand }}
+            </div>
+
+            <!-- Symbol row -->
+            <div class="inst-sym-row">
+              <div class="h-wire-seg" [class.live]="rung.powerFlowActive"></div>
+
+              <ng-container [ngSwitch]="inst.opcode">
+                <!-- XIC: ] [ -->
+                <div *ngSwitchCase="'XIC'" class="sym-contact" [class.live]="isTagTrue(inst.operand)">
+                  <div class="contact-bar left"></div>
+                  <div class="contact-gap"></div>
+                  <div class="contact-bar right"></div>
+                </div>
+                <!-- XIO: ]/[ -->
+                <div *ngSwitchCase="'XIO'" class="sym-contact xio" [class.live]="!isTagTrue(inst.operand)">
+                  <div class="contact-bar left"></div>
+                  <div class="contact-gap xio-gap">
+                    <div class="xio-slash"></div>
+                  </div>
+                  <div class="contact-bar right"></div>
+                </div>
+                <!-- OTE: ( ) -->
+                <div *ngSwitchCase="'OTE'" class="sym-coil" [class.live]="isTagTrue(inst.operand)">
+                  <div class="coil-circle"></div>
+                </div>
+                <!-- OTL -->
+                <div *ngSwitchCase="'OTL'" class="sym-coil otl" [class.live]="isTagTrue(inst.operand)">
+                  <div class="coil-circle"><span>L</span></div>
+                </div>
+                <!-- OTU -->
+                <div *ngSwitchCase="'OTU'" class="sym-coil otu" [class.live]="isTagTrue(inst.operand)">
+                  <div class="coil-circle"><span>U</span></div>
+                </div>
+                <!-- TON -->
+                <div *ngSwitchCase="'TON'" class="sym-ton">
+                  <div class="ton-box">
+                    <div class="ton-title">TON</div>
+                    <div class="ton-row"><span>Timer</span><span>{{ inst.operand }}</span></div>
+                    <div class="ton-row"><span>Preset</span><span>{{ inst.presetMs || 300 }}</span></div>
+                    <div class="ton-row"><span>Accum</span><span>0</span></div>
+                  </div>
+                </div>
+              </ng-container>
+
+              <div class="h-wire-seg" [class.live]="rung.powerFlowActive"></div>
+            </div>
+
+            <!-- Scope path (below) -->
+            <div class="inst-scope-path">
+              {{ getScopePath(inst.operand) }}
+            </div>
+
+            <!-- Operand selector -->
+            <div class="inst-controls">
+              <select [ngModel]="inst.operand"
+                (ngModelChange)="changeOperand(rIdx, iIdx, $event)"
+                (click)="$event.stopPropagation()">
+                <option *ngFor="let t of tags" [value]="t.name">{{ t.name }}</option>
+              </select>
+              <button class="del-inst-btn" (click)="removeInstruction(rIdx, iIdx, $event)">✕</button>
+            </div>
+          </div>
+
+          <div class="h-wire end" [class.live]="rung.powerFlowActive"></div>
+        </div>
+
+        <!-- Right power rail -->
+        <div class="power-rail right" [class.live]="rung.powerFlowActive"></div>
+      </div>
+    </div>
+  </div>
+</div>

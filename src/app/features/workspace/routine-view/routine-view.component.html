@@ -1,0 +1,57 @@
+<div class="routine-wrap" *ngIf="routine && project; else emptyTpl">
+
+  <!-- Routine Sub-toolbar -->
+  <div class="rtn-toolbar">
+    <div class="rtn-lang-pill" [attr.data-lang]="routine.language">
+      <span *ngIf="routine.language === 'LD'">Ladder Diagram (LD)</span>
+      <span *ngIf="routine.language === 'ST'">Structured Text (ST)</span>
+      <span *ngIf="routine.language === 'FBD'">Function Block Diagram (FBD)</span>
+    </div>
+    <span class="rtn-desc">{{ routine.description }}</span>
+    <div class="rtn-actions">
+      <button *ngIf="routine.language === 'ST'" class="tb-action save" (click)="saveStCode()">
+        <i class="fi fi-rr-check"></i> Save &amp; Verify
+      </button>
+      <button *ngIf="routine.language === 'LD'" class="tb-action" (click)="showNeutralText = !showNeutralText">
+        <i [class]="showNeutralText ? 'fi fi-rr-diagram-project' : 'fi fi-rr-code-simple'"></i>
+        {{ showNeutralText ? 'Graphical View' : 'Neutral Text' }}
+      </button>
+      <span class="rtn-id">ID: {{ routine.id }}</span>
+    </div>
+  </div>
+
+  <!-- Editor Host -->
+  <div class="editor-host">
+    <ftds-st-code-editor
+      *ngIf="routine.language === 'ST' || showNeutralText"
+      [code]="draftCode"
+      [tagSuggestions]="tagNames"
+      (codeChange)="onCodeEdited($event)"
+      (saveRequested)="saveStCode()"
+    ></ftds-st-code-editor>
+
+    <ftds-ladder-editor
+      *ngIf="routine.language === 'LD' && !showNeutralText"
+      [rungs]="routine.rungs"
+      [tags]="project.tags"
+      (rungsChange)="onRungsUpdated($event)"
+      (toggleTag)="onToggleTag($event)"
+    ></ftds-ladder-editor>
+
+    <ftds-fbd-editor
+      *ngIf="routine.language === 'FBD'"
+      [nodes]="routine.fbdNodes"
+      [wires]="routine.fbdWires"
+      (toggleTag)="onToggleTag($event)"
+    ></ftds-fbd-editor>
+  </div>
+</div>
+
+<ng-template #emptyTpl>
+  <div class="empty-editor">
+    <div class="empty-inner">
+      <i class="fi fi-rr-document empty-icon"></i>
+      <p>Select a routine from the <strong>Project Explorer</strong> to open it here.</p>
+    </div>
+  </div>
+</ng-template>

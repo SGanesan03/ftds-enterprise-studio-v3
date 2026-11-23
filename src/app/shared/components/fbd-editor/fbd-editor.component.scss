@@ -1,0 +1,19 @@
+.fbd-editor { display: flex; flex-direction: column; height: 100%; min-height: 0; background: #fff; }
+.fbd-toolbar {
+  height: 32px; background: #f0f0f0; border-bottom: 1px solid #d0d0d0;
+  display: flex; align-items: center; padding: 0 14px; gap: 14px; flex-shrink: 0;
+}
+.fbd-badge {
+  font-size: 11px; font-weight: 600; color: #6f42c1;
+  background: #f3eeff; border: 1px solid #d0b8ff;
+  padding: 1px 8px; border-radius: 2px; white-space: nowrap;
+}
+.fbd-hint { font-size: 11px; color: #888; }
+.fbd-legend { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+.legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #666; }
+.leg-wire { width: 24px; height: 2px; background: #bbb; border-radius: 1px; }
+.leg-wire.active { background: #28a745; }
+.fbd-canvas { flex: 1; min-height: 0; overflow: auto; background: #fff; }
+.fbd-canvas svg { display: block; }
+.fbd-block { transition: opacity 0.1s; }
+.fbd-block:hover { opacity: 0.85; }

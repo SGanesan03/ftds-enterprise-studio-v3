@@ -1,0 +1,80 @@
+<div class="hw-page" *ngIf="project">
+
+  <!-- Header -->
+  <div class="hw-header">
+    <div class="hw-header-left">
+      <span class="hw-title">I/O Configuration — 1756 ControlLogix Backplane</span>
+      <span class="hw-sub">{{ project.controllerCatalog }} | Firmware Rev {{ project.revision }}</span>
+    </div>
+    <div class="hw-header-right">
+      <div class="emu-badge" [class.run]="project.emulationRunning">
+        <span class="emu-led"></span>
+        {{ project.emulationRunning ? 'Logix Echo: ONLINE RUN' : 'OFFLINE / PROGRAM' }}
+      </div>
+      <div class="scan-badge">
+        <span class="scan-lbl">Scan Cycle</span>
+        <span class="scan-num">{{ project.scanTimeMs }} ms</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chassis Rack Visual -->
+  <div class="chassis-section">
+    <div class="chassis-label">1756 Chassis — {{ project.hardware.length }} Modules Installed</div>
+    <div class="chassis-rack">
+      <div *ngFor="let mod of project.hardware" class="module-card" [attr.data-status]="mod.status">
+        <div class="mod-slot-bar">
+          <span class="mod-slot">SLOT {{ mod.slot }}</span>
+          <span class="mod-led" [class.ok]="mod.status !== 'FAULT'" [class.sim]="mod.status === 'SIMULATED'"></span>
+        </div>
+        <div class="mod-cat">{{ mod.catalogNumber }}</div>
+        <div class="mod-name">{{ mod.name }}</div>
+        <div class="mod-details">
+          <div class="mod-detail-row">
+            <span class="detail-key">IP / Port</span>
+            <span class="detail-val">{{ mod.ipAddress }}</span>
+          </div>
+          <div class="mod-detail-row">
+            <span class="detail-key">Firmware</span>
+            <span class="detail-val">{{ mod.firmware }}</span>
+          </div>
+          <div class="mod-detail-row">
+            <span class="detail-key">Status</span>
+            <span class="detail-val status-val" [attr.data-status]="mod.status">{{ mod.status }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Network Topology -->
+  <div class="network-section">
+    <div class="section-title">EtherNet/IP Network Topology</div>
+    <div class="network-table-wrap">
+      <table class="network-table">
+        <thead>
+          <tr>
+            <th>Slot</th>
+            <th>Catalog Number</th>
+            <th>Module Name</th>
+            <th>IP Address</th>
+            <th>Firmware</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let mod of project.hardware">
+            <td class="mono">{{ mod.slot }}</td>
+            <td class="mono cat">{{ mod.catalogNumber }}</td>
+            <td>{{ mod.name }}</td>
+            <td class="mono ip">{{ mod.ipAddress }}</td>
+            <td class="mono">{{ mod.firmware }}</td>
+            <td>
+              <span class="status-chip" [attr.data-status]="mod.status">{{ mod.status }}</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

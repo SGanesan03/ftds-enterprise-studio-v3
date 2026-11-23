@@ -1,0 +1,46 @@
+<div class="udt-page" *ngIf="project">
+
+  <!-- Header -->
+  <div class="udt-header">
+    <div class="udt-header-left">
+      <span class="udt-title">User-Defined Data Types (UDTs)</span>
+      <span class="udt-sub">Structured complex data templates — shared across Controller, Programs &amp; Smart Objects</span>
+    </div>
+    <div class="udt-create-form">
+      <input type="text" [(ngModel)]="newUdtName" placeholder="UDT_NewStructure" (keyup.enter)="createUdt()" />
+      <input type="text" [(ngModel)]="newUdtDesc" placeholder="Description..." (keyup.enter)="createUdt()" />
+      <button class="btn-add" (click)="createUdt()"><i class="fi fi-rr-add"></i> New UDT</button>
+    </div>
+  </div>
+
+  <!-- UDT Cards -->
+  <div class="udt-grid">
+    <div *ngFor="let udt of project.userDefinedTypes" class="udt-card">
+      <div class="udt-card-header">
+        <div class="udt-card-title">
+          <i class="fi fi-rr-cube" style="color:#16a085;"></i>
+          <span class="udt-name">{{ udt.name }}</span>
+        </div>
+        <span class="member-count">{{ udt.members.length }} members</span>
+      </div>
+      <div class="udt-desc">{{ udt.description }}</div>
+
+      <table class="member-table">
+        <thead>
+          <tr>
+            <th>Member Name</th>
+            <th>Data Type</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let m of udt.members">
+            <td class="mono member-name">{{ m.name }}</td>
+            <td class="mono member-type" [attr.data-type]="m.dataType">{{ m.dataType }}</td>
+            <td class="member-desc">{{ m.description }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

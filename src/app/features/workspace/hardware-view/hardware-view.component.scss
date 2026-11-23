@@ -1,0 +1,70 @@
+.hw-page {
+  height: 100%; min-height: 0; overflow-y: auto;
+  background: #fff; padding: 16px;
+  display: flex; flex-direction: column; gap: 20px;
+}
+.hw-header {
+  display: flex; justify-content: space-between; align-items: center;
+  background: #f5f5f5; border: 1px solid #d0d0d0; border-radius: 3px;
+  padding: 12px 16px; gap: 12px; flex-wrap: wrap;
+}
+.hw-header-left { display: flex; flex-direction: column; gap: 3px; }
+.hw-title { font-size: 14px; font-weight: 600; color: #1e1e1e; }
+.hw-sub   { font-size: 12px; color: #666; font-family: 'Consolas', monospace; }
+.hw-header-right { display: flex; align-items: center; gap: 12px; }
+.emu-badge {
+  display: flex; align-items: center; gap: 6px; padding: 5px 12px;
+  border-radius: 2px; background: #f0f0f0; border: 1px solid #d0d0d0;
+  font-size: 12px; font-weight: 600; color: #555;
+}
+.emu-badge.run { background: #d4edda; border-color: #28a745; color: #155724; }
+.emu-led { width: 8px; height: 8px; border-radius: 50%; background: #ccc; }
+.emu-badge.run .emu-led { background: #28a745; box-shadow: 0 0 5px #28a745; }
+.scan-badge {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 4px 12px; background: #f0f0f0; border: 1px solid #d0d0d0; border-radius: 2px;
+}
+.scan-lbl { font-size: 10px; color: #888; }
+.scan-num { font-family: 'Consolas', monospace; font-size: 14px; color: #1a3a5c; font-weight: 700; }
+.chassis-section { display: flex; flex-direction: column; gap: 10px; }
+.chassis-label { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; color: #666; text-transform: uppercase; }
+.chassis-rack { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+.module-card {
+  background: #f8f8f8; border: 1px solid #d0d0d0;
+  border-top: 3px solid #1a3a5c; border-radius: 3px;
+  padding: 12px; display: flex; flex-direction: column; gap: 6px;
+}
+.module-card[data-status="FAULT"]     { border-top-color: #dc3545; }
+.module-card[data-status="SIMULATED"] { border-top-color: #f0a500; }
+.mod-slot-bar { display: flex; justify-content: space-between; align-items: center; }
+.mod-slot { font-family: 'Consolas', monospace; font-size: 10px; color: #888; }
+.mod-led  { width: 9px; height: 9px; border-radius: 50%; background: #dc3545; }
+.mod-led.ok  { background: #28a745; box-shadow: 0 0 5px rgba(40,167,69,0.5); }
+.mod-led.sim { background: #f0a500; }
+.mod-cat  { font-family: 'Consolas', monospace; font-size: 14px; font-weight: 700; color: #1a3a5c; }
+.mod-name { font-size: 12px; color: #333; }
+.mod-details { display: flex; flex-direction: column; gap: 3px; margin-top: 4px; }
+.mod-detail-row { display: flex; justify-content: space-between; font-size: 11px; }
+.detail-key { color: #888; }
+.detail-val { font-family: 'Consolas', monospace; color: #555; }
+.status-val[data-status="OK"]        { color: #28a745; }
+.status-val[data-status="SIMULATED"] { color: #f0a500; }
+.status-val[data-status="FAULT"]     { color: #dc3545; }
+.network-section { display: flex; flex-direction: column; gap: 10px; }
+.section-title { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; color: #666; text-transform: uppercase; }
+.network-table-wrap { overflow-x: auto; }
+.network-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.network-table th {
+  background: #f5f5f5; padding: 7px 12px; text-align: left;
+  font-size: 11px; color: #555; text-transform: uppercase;
+  letter-spacing: 0.04em; border-bottom: 2px solid #d0d0d0; white-space: nowrap;
+}
+.network-table td { padding: 7px 12px; border-bottom: 1px solid #f0f0f0; }
+.network-table tr:hover td { background: #e8f0fb; }
+.mono { font-family: 'Consolas', monospace; }
+.cat  { color: #1a3a5c; }
+.ip   { color: #28a745; }
+.status-chip { font-size: 11px; padding: 2px 8px; border-radius: 2px; background: #f0f0f0; color: #555; }
+.status-chip[data-status="OK"]        { color: #155724; border: 1px solid #b8dfc4; background: #d4edda; }
+.status-chip[data-status="SIMULATED"] { color: #856404; border: 1px solid #ffeeba; background: #fff3cd; }
+.status-chip[data-status="FAULT"]     { color: #721c24; border: 1px solid #f5c6cb; background: #f8d7da; }

@@ -1,0 +1,487 @@
+<!-- Splash -->
+<div class="splash" *ngIf="isLoading">
+  <div class="splash-logo">
+    <div class="ra-logo-lg"><i class="fi fi-sr-microchip"></i></div>
+    <div>
+      <span class="splash-title">FactoryTalk Design Studio</span>
+      <span class="splash-sub">Initializing workspace...</span>
+    </div>
+  </div>
+  <div class="splash-bar"><div class="splash-fill"></div></div>
+</div>
+<div class="splash error" *ngIf="!isLoading && loadError">
+  <i class="fi fi-rr-triangle-warning" style="font-size:32px;color:#e74c3c"></i>
+  <p style="color:#e74c3c">{{ loadError }}</p>
+  <button class="ftds-btn primary" (click)="dataService.initializeFromJsonStore()">Retry</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ MAIN SHELL -->
+<div class="ftds-shell" *ngIf="!isLoading && !loadError && project">
+
+  <!-- ① TITLE BAR -->
+  <div class="title-bar">
+    <div class="tb-left">
+      <div class="ra-logo-sm"><i class="fi fi-sr-microchip"></i></div>
+      <span class="tb-app">FactoryTalk Design Studio</span>
+      <span class="tb-sep">—</span>
+      <span class="tb-project">{{ project.name }}</span>
+      <span class="tb-saved" title="Saved"><i class="fi fi-rr-check-circle"></i></span>
+    </div>
+    <div class="tb-right">
+      <span class="tb-ver">FTDS 2.05 Early Look · Core</span>
+      <button class="tb-icon-btn" title="Help"><i class="fi fi-rr-interrogation"></i></button>
+      <button class="tb-icon-btn user" title="{{ currentUser }}"><i class="fi fi-rr-user"></i></button>
+      <button class="tb-icon-btn" title="Settings"><i class="fi fi-rr-settings"></i></button>
+    </div>
+  </div>
+
+  <!-- ② MENU BAR -->
+  <div class="menu-bar" (click)="$event.stopPropagation()">
+    <!-- Menu items -->
+    <div class="menu-item-wrap" *ngFor="let menu of menuBar; trackBy: trackByMenuLabel">
+      <button class="menu-item" [class.open]="activeMenu === menu.label"
+        role="menuitem"
+        [attr.aria-haspopup]="true"
+        [attr.aria-expanded]="activeMenu === menu.label"
+        (click)="toggleMenu(menu.label, $event)">{{ menu.label }}</button>
+      <div class="dropdown-menu" *ngIf="activeMenu === menu.label" role="menu" (click)="$event.stopPropagation()">
+        <ng-container *ngFor="let item of menu.items; trackBy: trackByActionLabel">
+          <div class="dd-divider" *ngIf="item.divider" role="separator"></div>
+          <button class="dd-item" *ngIf="!item.divider"
+            role="menuitem"
+            [class.disabled]="item.disabled"
+            (click)="runMenuAction(item)">
+            <i class="dd-icon" [class]="item.icon || 'fi fi-rr-dot-circle'"></i>
+            <span class="dd-label">{{ item.label }}</span>
+            <span class="dd-shortcut" *ngIf="item.shortcut">{{ item.shortcut }}</span>
+          </button>
+        </ng-container>
+      </div>
+    </div>
+
+    <div class="menu-spacer"></div>
+
+    <!-- Toolbar icons -->
+    <div class="menu-toolbar">
+      <button class="mt-btn" title="Undo"><i class="fi fi-rr-undo"></i></button>
+      <button class="mt-btn" title="Redo"><i class="fi fi-rr-redo"></i></button>
+      <div class="mt-sep"></div>
+      <button class="mt-btn" title="Save" (click)="dataService.exportProjectJson()"><i class="fi fi-rr-disk"></i></button>
+      <button class="mt-btn" title="Print"><i class="fi fi-rr-print"></i></button>
+      <div class="mt-sep"></div>
+      <button class="mt-btn go-btn" title="Go Online / Offline" (click)="toggleEmulator()"
+        [class.online]="project.emulationRunning">
+        <i [class]="project.emulationRunning ? 'fi fi-sr-stop' : 'fi fi-sr-play'"></i>
+        <span>{{ project.emulationRunning ? 'Go Offline' : 'Go Online' }}</span>
+      </button>
+      <button class="mt-btn" title="Verify" (click)="verifyProject()"><i class="fi fi-rr-check"></i></button>
+      <button class="mt-btn" title="Download" [disabled]="!project.emulationRunning"><i class="fi fi-rr-download"></i></button>
+    </div>
+  </div>
+
+  <!-- ③ BODY -->
+  <div class="ide-body">
+
+    <!-- ③a LEFT PANEL -->
+    <div class="left-panel" [style.width.px]="leftPanelWidth">
+
+      <!-- Panel Header -->
+      <div class="lp-header">
+        <span class="lp-title">Project Explorer</span>
+        <div class="lp-actions">
+          <button class="lp-btn" title="New Routine" (click)="showNewRoutineModal = !showNewRoutineModal">
+            <i class="fi fi-rr-file-add"></i>
+          </button>
+          <button class="lp-btn" title="Collapse All" (click)="collapseAll()">
+            <i class="fi fi-rr-compress-alt"></i>
+          </button>
+          <button class="lp-btn" title="Refresh" (click)="project && buildTree(project)">
+            <i class="fi fi-rr-refresh"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- New Routine Modal -->
+      <div class="new-rtn-form" *ngIf="showNewRoutineModal">
+        <div class="form-title"><i class="fi fi-rr-file-add"></i> New Routine</div>
+        <input [(ngModel)]="newRoutineName" placeholder="Routine_Name" (keyup.enter)="createNewRoutine()" />
+        <select [(ngModel)]="newRoutineLang">
+          <option value="LD">Ladder Diagram (LD)</option>
+          <option value="ST">Structured Text (ST)</option>
+          <option value="FBD">Function Block (FBD)</option>
+        </select>
+        <div class="form-btns">
+          <button class="ftds-btn primary sm" (click)="createNewRoutine()">Create</button>
+          <button class="ftds-btn sm" (click)="showNewRoutineModal=false">Cancel</button>
+        </div>
+      </div>
+
+      <!-- Tree -->
+      <div class="tree-scroll" role="tree" aria-label="Project Explorer">
+        <div *ngFor="let node of flatNodes; trackBy: trackByNodeId"
+          class="tree-node"
+          [class.active]="isNodeActive(node)"
+          [attr.data-level]="node.level"
+          role="treeitem"
+          [attr.aria-expanded]="hasChildren(node) ? expandedNodes.has(node.id) : null"
+          [attr.aria-selected]="isNodeActive(node)"
+          [attr.aria-level]="node.level + 1"
+          tabindex="0"
+          (click)="clickNode(node)"
+          (keydown.enter)="clickNode(node)"
+          (keydown.space)="clickNode(node)"
+          (contextmenu)="showTreeContextMenu($event, node)">
+
+          <!-- Indent spacer -->
+          <span class="tn-indent" [style.width.px]="node.level * 14"></span>
+
+          <!-- Expand arrow -->
+          <button class="tn-arrow-btn" *ngIf="hasChildren(node)"
+            (click)="toggleNode(node, $event)">
+            <i class="fi" [class.fi-rr-angle-small-down]="expandedNodes.has(node.id)"
+               [class.fi-rr-angle-small-right]="!expandedNodes.has(node.id)"></i>
+          </button>
+          <span class="tn-arrow-btn leaf" *ngIf="!hasChildren(node)"></span>
+
+          <!-- Icon -->
+          <i class="tn-icon" [class]="node.icon"
+            [class.icon-controller]="node.type==='controller'"
+            [class.icon-task]="node.type==='task'"
+            [class.icon-program]="node.type==='program'"
+            [class.icon-rtn-ld]="node.type==='routine' && node.routineLang==='LD'"
+            [class.icon-rtn-st]="node.type==='routine' && node.routineLang==='ST'"
+            [class.icon-rtn-fbd]="node.type==='routine' && node.routineLang==='FBD'"
+            [class.icon-tags]="node.type==='tags'"
+            [class.icon-udt]="node.type==='udt'"
+            [class.icon-io]="node.type==='io'"
+            [class.icon-folder]="node.type==='folder'"></i>
+
+          <!-- Label -->
+          <span class="tn-label">{{ node.label }}</span>
+
+          <!-- Lang badge for routines -->
+          <span class="tn-lang-badge" *ngIf="node.type==='routine'"
+            [attr.data-lang]="node.routineLang">{{ node.routineLang }}</span>
+        </div>
+      </div>
+
+      <!-- Resize handle -->
+      <div class="resize-handle" (mousedown)="startResize($event)"></div>
+    </div>
+
+    <!-- ③b CENTER STAGE -->
+    <div class="center-stage">
+
+      <!-- Tab Bar -->
+      <div class="tab-bar" role="tablist" aria-label="Open editors">
+        <div *ngFor="let tab of tabs; trackBy: trackByTabId"
+          class="editor-tab"
+          [class.active]="tab.id === activeTabId"
+          role="tab"
+          [attr.aria-selected]="tab.id === activeTabId"
+          (click)="nav.activateTab(tab.id)"
+          (contextmenu)="showTabContextMenu($event, tab)">
+          <i class="tab-lang-icon fi"
+            [class.fi-rr-diagram-project]="tab.language==='LD'"
+            [class.fi-rr-code-simple]="tab.language==='ST'"
+            [class.fi-rr-diagram-cells]="tab.language==='FBD'"
+            [class.fi-rr-tags]="tab.type==='TAGS_GRID'"
+            [class.fi-rr-ethernet]="tab.type==='HARDWARE_CONFIG'"
+            [class.fi-rr-cube]="tab.type==='UDT_DESIGNER'"
+            *ngIf="tab.language || tab.type !== 'ROUTINE'"></i>
+          <span class="tab-title">{{ tab.title }}</span>
+          <span class="tab-dirty" *ngIf="tab.isDirty" title="Unsaved changes">●</span>
+          <button class="tab-close" (click)="nav.closeTab(tab.id, $event)" title="Close">
+            <i class="fi fi-rr-cross-small"></i>
+          </button>
+        </div>
+        <div class="tab-spacer"></div>
+        <button class="tab-panel-btn" title="Split Editor"><i class="fi fi-rr-layout-fluid"></i></button>
+      </div>
+
+      <!-- Breadcrumb -->
+      <div class="breadcrumb-bar" *ngIf="currentTab">
+        <i class="fi fi-rr-home bc-home"></i>
+        <ng-container *ngFor="let crumb of currentTab.breadcrumb; let last = last">
+          <i class="fi fi-rr-angle-small-right bc-sep"></i>
+          <span class="bc-item" [class.bc-last]="last">{{ crumb }}</span>
+        </ng-container>
+      </div>
+
+      <!-- Editor viewport -->
+      <div class="editor-viewport" (contextmenu)="showEditorContextMenu($event)">
+        <router-outlet></router-outlet>
+      </div>
+
+      <!-- Output Panel -->
+      <div class="output-panel" *ngIf="bottomPanelOpen">
+        <div class="op-tabs">
+          <button class="op-tab" [class.active]="bottomPanelTab==='Output'" (click)="bottomPanelTab='Output'">
+            <i class="fi fi-rr-terminal"></i> Output
+          </button>
+          <button class="op-tab" [class.active]="bottomPanelTab==='Errors'" (click)="bottomPanelTab='Errors'">
+            <i class="fi fi-rr-cross-circle"></i> Errors
+          </button>
+          <button class="op-tab" [class.active]="bottomPanelTab==='Warnings'" (click)="bottomPanelTab='Warnings'">
+            <i class="fi fi-rr-triangle-warning"></i> Warnings
+          </button>
+          <button class="op-tab" [class.active]="bottomPanelTab==='Find'" (click)="bottomPanelTab='Find'">
+            <i class="fi fi-rr-search"></i> Find Results
+          </button>
+          <div class="op-spacer"></div>
+          <button class="op-close" title="Close Panel" (click)="nav.toggleBottomPanel()">
+            <i class="fi fi-rr-cross"></i>
+          </button>
+        </div>
+        <div class="op-body">
+        <div *ngFor="let log of logs; trackBy: dataService.trackByLogId" class="log-row">
+            <span class="log-ts">{{ log.timestamp }}</span>
+            <span class="log-lvl" [attr.data-lvl]="log.level">{{ log.level }}</span>
+            <span class="log-src">[{{ log.source }}]</span>
+            <span class="log-msg">{{ log.message }}</span>
+          </div>
+          <div *ngIf="!logs.length" class="op-empty">No output messages.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ③c RIGHT PANEL -->
+    <div class="right-panel">
+
+      <!-- Right panel header -->
+      <div class="rp-header">
+        <div class="rp-tabs">
+          <button class="rp-tab" [class.active]="rightPanel==='COPILOT'" (click)="rightPanel='COPILOT'">
+            <i class="fi fi-sr-stars"></i> Copilot
+          </button>
+          <button class="rp-tab" [class.active]="rightPanel==='TOOLBOX'" (click)="rightPanel='TOOLBOX'">
+            <i class="fi fi-rr-toolbox"></i> Toolbox
+          </button>
+        </div>
+        <div class="rp-actions">
+          <button class="lp-btn" title="Pin panel"><i class="fi fi-rr-thumbtack"></i></button>
+          <button class="lp-btn" title="More options"><i class="fi fi-rr-menu-dots-vertical"></i></button>
+        </div>
+      </div>
+
+      <!-- Copilot Body -->
+      <div class="copilot-body" *ngIf="rightPanel==='COPILOT'">
+        <div class="copilot-avatar">
+          <div class="copilot-star"><i class="fi fi-sr-stars"></i></div>
+        </div>
+        <div class="copilot-greeting">
+          <strong>Greetings, {{ currentUser }}</strong>
+          <p>As your AI assistant, I accelerate your efficiency in FactoryTalk Design Studio.</p>
+          <p class="copilot-note">
+            <i class="fi fi-rr-info"></i>
+            Powered by AI — verify suggestions before applying.
+          </p>
+        </div>
+
+        <!-- Quick actions -->
+        <div class="copilot-quick-actions">
+          <button class="cqa-btn" (click)="nav.setSidebarSection('CROSS_REF')">
+            <i class="fi fi-rr-search"></i> Cross Ref
+          </button>
+          <button class="cqa-btn" (click)="nav.setSidebarSection('SMART_OBJECTS')">
+            <i class="fi fi-rr-cube"></i> Smart Obj
+          </button>
+          <button class="cqa-btn" (click)="nav.setSidebarSection('GIT_VAULT')">
+            <i class="fi fi-rr-box-alt"></i> Vault
+          </button>
+          <button class="cqa-btn" (click)="nav.setSidebarSection('JSON_INSPECTOR')">
+            <i class="fi fi-rr-code-branch"></i> JSON
+          </button>
+        </div>
+
+        <!-- Cross-Reference section -->
+        <div class="copilot-section" *ngIf="activeSidebar==='CROSS_REF'">
+          <div class="cs-title"><i class="fi fi-rr-search"></i> Tag Cross Reference</div>
+          <select [(ngModel)]="xrefTag" (ngModelChange)="runCrossReference()" class="cs-select">
+            <option value="">— Select Tag —</option>
+            <option *ngFor="let t of project.tags" [value]="t.name">{{ t.name }}</option>
+          </select>
+          <div *ngIf="xrefTag && !xrefHits.length" class="cs-empty">
+            <i class="fi fi-rr-info"></i> No usages found for <strong>{{ xrefTag }}</strong>
+          </div>
+          <div *ngFor="let hit of xrefHits" class="cs-hit" (click)="jumpToCrossRef(hit)">
+            <div class="cs-hit-top">
+              <span class="cs-rtn"><i class="fi fi-rr-diagram-project"></i> {{ hit.routineName }}</span>
+              <span class="cs-badge" [class.write]="hit.accessType==='Write'">{{ hit.accessType }}</span>
+            </div>
+            <div class="cs-loc">{{ hit.programName }} › {{ hit.location }}</div>
+          </div>
+        </div>
+
+        <!-- Smart Objects section -->
+        <div class="copilot-section" *ngIf="activeSidebar==='SMART_OBJECTS'">
+          <div class="cs-title"><i class="fi fi-rr-cube"></i> Smart Objects Library</div>
+          <div *ngFor="let so of project.smartObjects" class="cs-so">
+            <div class="cs-so-header">
+              <span class="cs-so-name">{{ so.name }}</span>
+              <span class="cs-so-ver">v{{ so.version }}</span>
+            </div>
+            <div class="cs-so-cat"><i class="fi fi-rr-tag"></i> {{ so.category }}</div>
+            <button class="ftds-btn primary sm" (click)="deploySmartObject(so)">
+              <i class="fi fi-rr-add"></i> Instantiate
+            </button>
+          </div>
+        </div>
+
+        <!-- Vault section -->
+        <div class="copilot-section" *ngIf="activeSidebar==='GIT_VAULT'">
+          <div class="cs-title"><i class="fi fi-rr-box-alt"></i> FactoryTalk Vault</div>
+          <textarea rows="2" [(ngModel)]="commitMessage" placeholder="Commit message..." class="cs-textarea"></textarea>
+          <button class="ftds-btn primary sm" (click)="pushCommit()">
+            <i class="fi fi-rr-upload"></i> Commit &amp; Push
+          </button>
+          <div *ngFor="let c of project.commits" class="cs-commit">
+            <div class="cs-commit-top">
+              <span class="cs-hash"><i class="fi fi-rr-code-branch"></i> {{ c.hash }}</span>
+              <span class="cs-cmeta">{{ c.timestamp }}</span>
+            </div>
+            <span class="cs-cmsg">{{ c.message }}</span>
+            <span class="cs-cauthor"><i class="fi fi-rr-user"></i> {{ c.author }}</span>
+          </div>
+        </div>
+
+        <!-- JSON Inspector section -->
+        <div class="copilot-section" *ngIf="activeSidebar==='JSON_INSPECTOR'">
+          <div class="cs-title"><i class="fi fi-rr-code-branch"></i> Live JSON Store</div>
+          <p class="cs-sub">Reactive state from <code>ftds-workspace-db.json</code></p>
+          <pre class="json-pre">{{ liveJsonSummary }}</pre>
+        </div>
+      </div>
+
+      <!-- Toolbox Body -->
+      <div class="toolbox-body" *ngIf="rightPanel==='TOOLBOX'">
+        <div class="toolbox-section-group">
+          <div class="tbx-group-title"><i class="fi fi-rr-diagram-project"></i> Ladder Instructions</div>
+          <div class="tbx-items">
+            <div class="tbx-item" title="Examine If Closed">
+              <svg width="32" height="20" viewBox="0 0 32 20"><line x1="0" y1="10" x2="7" y2="10" stroke="currentColor" stroke-width="1.5"/><line x1="7" y1="3" x2="7" y2="17" stroke="currentColor" stroke-width="1.5"/><line x1="25" y1="3" x2="25" y2="17" stroke="currentColor" stroke-width="1.5"/><line x1="25" y1="10" x2="32" y2="10" stroke="currentColor" stroke-width="1.5"/></svg>
+              <span>XIC</span>
+            </div>
+            <div class="tbx-item" title="Examine If Open">
+              <svg width="32" height="20" viewBox="0 0 32 20"><line x1="0" y1="10" x2="7" y2="10" stroke="currentColor" stroke-width="1.5"/><line x1="7" y1="3" x2="7" y2="17" stroke="currentColor" stroke-width="1.5"/><line x1="25" y1="3" x2="25" y2="17" stroke="currentColor" stroke-width="1.5"/><line x1="25" y1="10" x2="32" y2="10" stroke="currentColor" stroke-width="1.5"/><line x1="11" y1="6" x2="21" y2="14" stroke="currentColor" stroke-width="1.5"/></svg>
+              <span>XIO</span>
+            </div>
+            <div class="tbx-item" title="Output Energize">
+              <svg width="32" height="20" viewBox="0 0 32 20"><line x1="0" y1="10" x2="7" y2="10" stroke="currentColor" stroke-width="1.5"/><circle cx="16" cy="10" r="7" fill="none" stroke="currentColor" stroke-width="1.5"/><line x1="25" y1="10" x2="32" y2="10" stroke="currentColor" stroke-width="1.5"/></svg>
+              <span>OTE</span>
+            </div>
+            <div class="tbx-item" title="Timer On Delay">
+              <svg width="32" height="20" viewBox="0 0 32 20"><rect x="4" y="2" width="24" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><text x="8" y="14" font-size="8" fill="currentColor" font-family="monospace">TON</text></svg>
+              <span>TON</span>
+            </div>
+            <div class="tbx-item" title="Counter Up">
+              <svg width="32" height="20" viewBox="0 0 32 20"><rect x="4" y="2" width="24" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><text x="8" y="14" font-size="8" fill="currentColor" font-family="monospace">CTU</text></svg>
+              <span>CTU</span>
+            </div>
+          </div>
+        </div>
+        <div class="toolbox-section-group">
+          <div class="tbx-group-title"><i class="fi fi-rr-code-simple"></i> ST Keywords</div>
+          <div class="tbx-items">
+            <div class="tbx-item"><span class="tok-kw">IF</span></div>
+            <div class="tbx-item"><span class="tok-kw">FOR</span></div>
+            <div class="tbx-item"><span class="tok-kw">WHILE</span></div>
+            <div class="tbx-item"><span class="tok-kw">CASE</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Copilot Input -->
+      <div class="copilot-input-bar">
+        <input type="text" [(ngModel)]="copilotInput" placeholder="Ask Copilot about your PLC logic..."
+          class="copilot-input" (keyup.enter)="sendCopilot()" />
+        <button class="copilot-send" (click)="sendCopilot()" title="Send">
+          <i class="fi fi-rr-paper-plane"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- ③d FAR-RIGHT ACTIVITY BAR -->
+    <div class="activity-bar">
+      <button class="act-btn" [class.active]="activeSidebar==='EXPLORER'"
+        (click)="nav.setSidebarSection('EXPLORER')" title="Project Explorer">
+        <i class="fi fi-rr-list-check"></i>
+      </button>
+      <button class="act-btn" [class.active]="activeSidebar==='SMART_OBJECTS'"
+        (click)="nav.setSidebarSection('SMART_OBJECTS')" title="Smart Objects">
+        <i class="fi fi-rr-cube"></i>
+      </button>
+      <button class="act-btn" [class.active]="activeSidebar==='CROSS_REF'"
+        (click)="nav.setSidebarSection('CROSS_REF')" title="Cross Reference">
+        <i class="fi fi-rr-search"></i>
+      </button>
+      <button class="act-btn" [class.active]="activeSidebar==='GIT_VAULT'"
+        (click)="nav.setSidebarSection('GIT_VAULT')" title="FactoryTalk Vault">
+        <i class="fi fi-rr-box-alt"></i>
+      </button>
+      <button class="act-btn" [class.active]="activeSidebar==='JSON_INSPECTOR'"
+        (click)="nav.setSidebarSection('JSON_INSPECTOR')" title="JSON Inspector">
+        <i class="fi fi-rr-code-branch"></i>
+      </button>
+      <div class="act-spacer"></div>
+      <button class="act-btn" title="Toggle Output Panel" (click)="nav.toggleBottomPanel()">
+        <i class="fi fi-rr-terminal"></i>
+      </button>
+      <button class="act-btn" title="Settings">
+        <i class="fi fi-rr-settings"></i>
+      </button>
+    </div>
+
+  </div><!-- end ide-body -->
+
+  <!-- ④ STATUS BAR -->
+  <div class="status-bar">
+    <div class="sb-left">
+      <button class="sb-item conn" [class.online]="project.emulationRunning"
+        (click)="toggleEmulator()" title="Toggle Online/Offline">
+        <i class="fi" [class.fi-sr-circle-small]="!project.emulationRunning"
+           [class.fi-sr-check-circle]="project.emulationRunning"></i>
+        {{ project.emulationRunning ? 'Online (Logix Echo)' : 'Offline' }}
+      </button>
+      <span class="sb-sep">|</span>
+      <span class="sb-item"><i class="fi fi-rr-microchip"></i> {{ project.controllerCatalog }}</span>
+      <span class="sb-sep">|</span>
+      <span class="sb-item">Rev {{ project.revision }}</span>
+      <span class="sb-sep">|</span>
+      <span class="sb-item"><i class="fi fi-rr-time-fast"></i> {{ project.scanTimeMs }} ms</span>
+    </div>
+    <div class="sb-right">
+      <span class="sb-item" *ngIf="currentTab?.language">
+        <i class="fi fi-rr-diagram-project" *ngIf="currentTab?.language==='LD'"></i>
+        <i class="fi fi-rr-code-simple" *ngIf="currentTab?.language==='ST'"></i>
+        <i class="fi fi-rr-diagram-cells" *ngIf="currentTab?.language==='FBD'"></i>
+        {{ currentTab?.language }}
+      </span>
+      <span class="sb-sep" *ngIf="currentTab?.language">|</span>
+      <button class="sb-item link" (click)="nav.toggleBottomPanel()">
+        <i class="fi fi-rr-terminal"></i> Output
+      </button>
+      <span class="sb-sep">|</span>
+      <span class="sb-item"><i class="fi fi-rr-code-branch"></i> {{ project.branch }}</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ CONTEXT MENU -->
+<div class="context-menu" *ngIf="contextMenu"
+  role="menu"
+  [style.left.px]="contextMenu.x" [style.top.px]="contextMenu.y"
+  (click)="$event.stopPropagation()">
+  <ng-container *ngFor="let item of contextMenu.items; trackBy: trackByActionLabel">
+    <div class="ctx-divider" *ngIf="item.divider" role="separator"></div>
+    <button class="ctx-item" *ngIf="!item.divider"
+      role="menuitem"
+      [class.disabled]="item.disabled"
+      (click)="runContextAction(item)">
+      <i class="ctx-icon" [class]="item.icon || 'fi fi-rr-dot-circle'"></i>
+      <span class="ctx-label">{{ item.label }}</span>
+      <span class="ctx-shortcut" *ngIf="item.shortcut">{{ item.shortcut }}</span>
+    </button>
+  </ng-container>
+</div>

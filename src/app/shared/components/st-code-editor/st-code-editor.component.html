@@ -1,0 +1,45 @@
+<div class="st-editor">
+
+  <!-- Editor Toolbar -->
+  <div class="editor-toolbar">
+    <div class="toolbar-left">
+      <span class="lang-badge">IEC 61131-3 Structured Text</span>
+      <span class="file-info">Lines: {{ lineCount }} · UTF-8 · LF</span>
+    </div>
+    <div class="toolbar-right">
+      <label class="insert-label">Insert Tag:</label>
+      <select #tagSel (change)="insertTag(tagSel.value); tagSel.value=''" class="tag-select">
+        <option value="">— Quick Insert Tag —</option>
+        <option *ngFor="let t of tagSuggestions" [value]="t">{{ t }}</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Code Area -->
+  <div class="code-area">
+    <!-- Line Numbers Gutter -->
+    <div class="gutter" #gutterRef>
+      <div *ngFor="let n of lineNumbers" class="ln">{{ n }}</div>
+    </div>
+
+    <!-- Scroll Container -->
+    <div class="scroll-host">
+      <!-- Syntax Highlight Layer -->
+      <pre class="hl-layer" #preRef aria-hidden="true" [innerHTML]="highlightedHtml"></pre>
+      <!-- Input Layer -->
+      <textarea
+        #textareaRef
+        class="input-layer"
+        [ngModel]="code"
+        (ngModelChange)="onTextChange($event)"
+        (scroll)="syncScroll(textareaRef, preRef, gutterRef)"
+        (keydown)="onKeyDown($event)"
+        spellcheck="false"
+        autocomplete="off"
+        autocapitalize="off"
+        autocorrect="off"
+      ></textarea>
+    </div>
+  </div>
+
+</div>

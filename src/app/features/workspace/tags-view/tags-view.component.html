@@ -1,0 +1,90 @@
+<div class="tags-page" *ngIf="project">
+
+  <!-- Header toolbar -->
+  <div class="tags-toolbar">
+    <div class="toolbar-left">
+      <span class="view-title">Controller &amp; Program Tags</span>
+      <span class="tag-count">{{ cachedTags.length }} of {{ project.tags.length }} tags</span>
+    </div>
+    <div class="toolbar-right">
+      <div class="filter-row">
+        <label>Scope:</label>
+        <select [(ngModel)]="scopeFilter" (ngModelChange)="applyFilter()">
+          <option value="ALL">All Scopes</option>
+          <option value="Controller">Controller</option>
+          <option value="Program">Program</option>
+          <option value="Routine">Routine</option>
+        </select>
+        <input type="text" [(ngModel)]="searchText" (ngModelChange)="applyFilter()" placeholder="Search tag name..." class="search-input" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Tag Bar -->
+  <div class="add-tag-bar">
+    <span class="add-label">New Tag:</span>
+    <input type="text" [(ngModel)]="newName" placeholder="Tag_Name" (keyup.enter)="createTag()" class="tag-name-input" />
+    <select [(ngModel)]="newType">
+      <option value="BOOL">BOOL</option>
+      <option value="DINT">DINT</option>
+      <option value="REAL">REAL</option>
+      <option value="TIMER">TIMER</option>
+      <option value="STRING">STRING</option>
+    </select>
+    <select [(ngModel)]="newScope">
+      <option value="Controller">Controller</option>
+      <option value="Program">Program</option>
+      <option value="Routine">Routine</option>
+    </select>
+    <button class="btn-add" (click)="createTag()"><i class="fi fi-rr-add"></i> Add Tag</button>
+  </div>
+
+  <!-- Tag Grid -->
+  <div class="grid-wrap">
+    <table class="tag-grid">
+      <thead>
+        <tr>
+          <th class="col-name">Name</th>
+          <th class="col-type">Data Type</th>
+          <th class="col-scope">Scope</th>
+          <th class="col-owner">Scope Owner</th>
+          <th class="col-usage">Usage</th>
+          <th class="col-value">Value (Online)</th>
+          <th class="col-desc">Description</th>
+          <th class="col-act"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let tag of cachedTags; trackBy: trackByTagId; let odd = odd" [class.odd]="odd">
+          <td class="col-name mono tag-name">
+            <i class="fi fi-rr-tag" style="color:#e67e22;margin-right:4px;"></i>{{ tag.name }}
+          </td>
+          <td class="col-type mono type-cell" [attr.data-type]="tag.dataType">{{ tag.dataType }}</td>
+          <td class="col-scope">
+            <span class="scope-chip" [attr.data-scope]="tag.scope">{{ tag.scope }}</span>
+          </td>
+          <td class="col-owner muted mono">{{ tag.scopeOwner }}</td>
+          <td class="col-usage">{{ tag.usage }}</td>
+          <td class="col-value">
+            <button *ngIf="tag.dataType === 'BOOL'"
+              class="bool-btn" [class.on]="tag.value === true"
+              (click)="toggleBool(tag)">
+              <span class="bool-led" [class.on]="tag.value === true"></span>
+              {{ tag.value ? '1 (TRUE)' : '0 (FALSE)' }}
+            </button>
+            <input *ngIf="tag.dataType !== 'BOOL'"
+              type="number" class="num-input mono"
+              [ngModel]="tag.value"
+              (change)="updateNumeric(tag, $event)" />
+          </td>
+          <td class="col-desc muted">{{ tag.description }}</td>
+          <td class="col-act">
+            <button class="del-btn" (click)="deleteTag(tag.id)" title="Delete tag">
+              <i class="fi fi-rr-trash"></i>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
